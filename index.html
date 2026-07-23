@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#172554">
+  <title>AP2 Lernzentrale</title>
+  <style>
+    :root{
+      --bg:#f4f6fb;--card:#fff;--navy:#172554;--blue:#2563eb;
+      --violet:#7c3aed;--green:#059669;--amber:#d97706;
+      --text:#172033;--muted:#657087;--border:#e3e8f2;
+      --shadow:0 12px 35px rgba(23,37,84,.09);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+    button,input,textarea{font:inherit}
+    .wrap{max-width:980px;margin:auto;padding:22px 16px 70px}
+    .hero{background:linear-gradient(135deg,#172554,#312e81);color:#fff;border-radius:24px;padding:26px;box-shadow:var(--shadow)}
+    .hero small{color:#c7d2fe;text-transform:uppercase;letter-spacing:.12em;font-weight:700}
+    .hero h1{margin:8px 0 6px;font-size:clamp(26px,5vw,42px)}
+    .hero p{margin:0;color:#dbe4ff;max-width:720px;line-height:1.55}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 5px 18px rgba(23,37,84,.05)}
+    .subject h2{font-size:18px;margin:8px 0 4px}
+    .subject p{font-size:13px;color:var(--muted);margin:0 0 14px;line-height:1.45}
+    .badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800}
+    .ksk .badge{background:#ede9fe;color:#6d28d9}.gap .badge{background:#dbeafe;color:#1d4ed8}.wiso .badge{background:#d1fae5;color:#047857}
+    .bar{height:9px;background:#edf0f6;border-radius:999px;overflow:hidden}
+    .fill{height:100%;width:0;border-radius:999px;transition:.25s}
+    .ksk .fill{background:var(--violet)}.gap .fill{background:var(--blue)}.wiso .fill{background:var(--green)}
+    .progress-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:var(--muted)}
+    .section-title{margin:28px 0 12px;font-size:22px}
+    .topics{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .topic{display:flex;gap:11px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer}
+    .topic input{margin-top:3px;width:18px;height:18px}
+    .topic b{display:block;font-size:14px}.topic span{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+    .tools{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .field{display:flex;gap:8px;margin-top:10px}
+    .field input,.field textarea{width:100%;border:1px solid var(--border);border-radius:12px;padding:11px;background:#fbfcff}
+    .field textarea{min-height:110px;resize:vertical}
+    .btn{border:0;border-radius:12px;padding:11px 14px;background:var(--navy);color:#fff;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#eef2ff;color:#3730a3}
+    .note{font-size:12px;color:var(--muted);line-height:1.55}
+    .footer{margin-top:28px;color:var(--muted);font-size:11px;text-align:center;line-height:1.5}
+    .toast{position:fixed;right:18px;bottom:18px;background:#172554;color:#fff;padding:12px 16px;border-radius:12px;opacity:0;transform:translateY(12px);pointer-events:none;transition:.2s}
+    .toast.show{opacity:1;transform:none}
+    @media(max-width:720px){.grid,.topics,.tools{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <small>Unabhängige Prüfungsvorbereitung</small>
+      <h1>AP2 Lernzentrale</h1>
+      <p>Dein persönlicher Lernstand für GAP, KSK und WiSo. Diese stabile Basis speichert alles lokal im Browser und funktioniert ohne Login oder externe Dienste.</p>
+    </section>
+
+    <section class="grid" id="subjectCards"></section>
+
+    <h2 class="section-title">Lernthemen</h2>
+    <section class="topics" id="topics"></section>
+
+    <h2 class="section-title">Werkzeuge</h2>
+    <section class="tools">
+      <article class="card">
+        <h3 style="margin-top:0">Punkteziel</h3>
+        <p class="note">Trage deine erwarteten Ergebnisse ein. Die Gewichtung orientiert sich an deiner AP2-Struktur.</p>
+        <div class="field"><input id="ap1" type="number" min="0" max="100" placeholder="AP1, z. B. 85"></div>
+        <div class="field"><input id="gap" type="number" min="0" max="100" placeholder="GAP"></div>
+        <div class="field"><input id="ksk" type="number" min="0" max="100" placeholder="KSK"></div>
+        <div class="field"><input id="wiso" type="number" min="0" max="100" placeholder="WiSo"></div>
+        <div class="field"><input id="oral" type="number" min="0" max="100" placeholder="Fachgespräch"></div>
+        <div class="field"><button class="btn" onclick="calculateScore()">Berechnen</button></div>
+        <div id="scoreResult" style="margin-top:14px;font-weight:800"></div>
+      </article>
+
+      <article class="card">
+        <h3 style="margin-top:0">Lernnotiz</h3>
+        <p class="note">Notiere, was du als Nächstes lernen oder wiederholen möchtest.</p>
+        <div class="field"><textarea id="note" placeholder="Meine nächste Lerneinheit ..."></textarea></div>
+        <div class="field"><button class="btn" onclick="saveNote()">Notiz speichern</button><button class="btn secondary" onclick="resetData()">Zurücksetzen</button></div>
+      </article>
+    </section>
+
+    <div class="footer">Kein offizielles Angebot und keine Kooperation mit einer Industrie- und Handelskammer. Keine Originalprüfungsaufgaben enthalten.</div>
+  </main>
+  <div class="toast" id="toast">Gespeichert</div>
+
+<script>
+const subjects = {
+  ksk:{label:"KSK",title:"Kaufmännische Steuerung",className:"ksk"},
+  gap:{label:"GAP",title:"Geschäftsprozesse",className:"gap"},
+  wiso:{label:"WiSo",title:"Wirtschaft & Soziales",className:"wiso"}
+};
+const topicData = [
+  {id:"ksk1",subject:"ksk",title:"Buchungssätze",sub:"Soll/Haben, Einkauf, Verkauf, Bank"},
+  {id:"ksk2",subject:"ksk",title:"Skonto und Steuerkorrektur",sub:"Überweisungsbetrag und Kontierung"},
+  {id:"ksk3",subject:"ksk",title:"Abschreibungen und Abgrenzung",sub:"AfA, RAP und Rückstellungen"},
+  {id:"ksk4",subject:"ksk",title:"Kosten- und Leistungsrechnung",sub:"BAB, Zuschlagssätze und Kennzahlen"},
+  {id:"gap1",subject:"gap",title:"Beschaffung und Lieferanten",sub:"Bewertung, Kennzahlen und Auswahl"},
+  {id:"gap2",subject:"gap",title:"Lager und Bestellverfahren",sub:"Meldebestand, Bestellpunkt und JIT"},
+  {id:"gap3",subject:"gap",title:"Marketing und Vertrieb",sub:"Marktforschung und Außendienst"},
+  {id:"gap4",subject:"gap",title:"Kalkulation und Angebot",sub:"Handelskalkulation und Auslandsgeschäft"},
+  {id:"wiso1",subject:"wiso",title:"Markt und Konjunktur",sub:"Angebot, Nachfrage und Marktformen"},
+  {id:"wiso2",subject:"wiso",title:"Ausbildung und Arbeitsrecht",sub:"BBiG, JArbSchG und Vertragsende"},
+  {id:"wiso3",subject:"wiso",title:"Betriebsrat und Tarifrecht",sub:"Mitbestimmung und Tarifvertrag"},
+  {id:"wiso4",subject:"wiso",title:"Arbeitsschutz und Nachhaltigkeit",sub:"Gefahrstoffe, Brandschutz und Abläufe"}
+];
+const KEY="ap2-clean-v1";
+let state = JSON.parse(localStorage.getItem(KEY) || '{"done":{},"note":"","scores":{}}');
+
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function toast(text="Gespeichert"){const t=document.getElementById("toast");t.textContent=text;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1400)}
+function subjectProgress(key){
+  const own=topicData.filter(t=>t.subject===key);
+  const done=own.filter(t=>state.done[t.id]).length;
+  return {done,total:own.length,pct:Math.round(done/own.length*100)};
+}
+function renderCards(){
+  document.getElementById("subjectCards").innerHTML=Object.entries(subjects).map(([key,s])=>{
+    const p=subjectProgress(key);
+    return `<article class="card subject ${s.className}">
+      <span class="badge">${s.label}</span><h2>${s.title}</h2>
+      <p>${p.done} von ${p.total} Themen erledigt</p>
+      <div class="bar"><div class="fill" style="width:${p.pct}%"></div></div>
+      <div class="progress-row"><span>Fortschritt</span><b>${p.pct}%</b></div>
+    </article>`;
+  }).join("");
+}
+function renderTopics(){
+  document.getElementById("topics").innerHTML=topicData.map(t=>`
+    <label class="topic">
+      <input type="checkbox" ${state.done[t.id]?"checked":""} onchange="toggleTopic('${t.id}',this.checked)">
+      <div><b>${t.title}</b><span>${subjects[t.subject].label} · ${t.sub}</span></div>
+    </label>`).join("");
+}
+function toggleTopic(id,checked){state.done[id]=checked;save();renderCards();toast()}
+function saveNote(){state.note=document.getElementById("note").value;save();toast()}
+function calculateScore(){
+  const ids=["ap1","gap","ksk","wiso","oral"];
+  const weights=[.25,.30,.15,.10,.20];
+  let total=0,complete=true;
+  ids.forEach((id,i)=>{const el=document.getElementById(id);const v=Number(el.value);if(el.value==="")complete=false;else{state.scores[id]=v;total+=v*weights[i]}});
+  save();
+  document.getElementById("scoreResult").textContent=complete?`Gesamtprognose: ${total.toFixed(1)} Punkte`:"Bitte alle fünf Werte eintragen.";
+}
+function resetData(){
+  if(!confirm("Alle lokal gespeicherten Daten wirklich löschen?"))return;
+  localStorage.removeItem(KEY);location.reload();
+}
+function boot(){
+  renderCards();renderTopics();
+  document.getElementById("note").value=state.note||"";
+  ["ap1","gap","ksk","wiso","oral"].forEach(id=>document.getElementById(id).value=state.scores[id]??"");
+}
+boot();
+</script>
+</body>
+</html>
